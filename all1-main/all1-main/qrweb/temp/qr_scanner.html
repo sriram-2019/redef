@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+{% load static %}
+<html lang="en">
+<head>
+    <title>Sliding QR Code Display</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css">
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <link href="https://stackpath.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css" rel="stylesheet">
+
+    <style>
+        /* Main container */
+        .slider-container {
+            display: flex;
+            width: 100%;
+            height: 100vh;
+            position: relative;
+            overflow: hidden;
+        }
+
+        /* Image Section */
+        .image-container {
+            background: url('{% static "image/bg.jpg" %}') center no-repeat;
+            background-size: cover;
+            width: 50%;
+            height: 100vh;
+            position: absolute;
+            left: 0;
+            top: 0;
+            transition: transform 0.8s ease-in-out;
+        }
+
+        /* Form Section */
+        .form-container {
+            background-color: #fccc00;
+            width: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            transition: opacity 0.5s ease-in-out;
+            position: absolute;
+            right: 0;
+            height: 100vh;
+        }
+
+        .form-box {
+            text-align: center;
+        }
+
+        /* QR Code Section */
+        .qr-container {
+            background-color: white;
+            width: 50%;
+            height: 100vh;
+            position: absolute;
+            left: 0;
+            top: 0;
+            display: none;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+            transition: transform 0.8s ease-in-out;
+        }
+
+        /* Buttons */
+        .btn-custom {
+            width: 200px;
+            height: 50px;
+            font-size: 18px;
+            font-weight: bold;
+            margin: 10px;
+            border-radius: 25px;
+            transition: 0.3s ease-in-out;
+        }
+
+        .btn-create {
+            background-color: #28a745;
+            color: white;
+        }
+
+        .btn-create:hover {
+            background-color: #218838;
+            transform: scale(1.05);
+        }
+
+        .btn-display {
+            background-color: #007bff;
+            color: white;
+        }
+
+        .btn-display:hover {
+            background-color: #0056b3;
+            transform: scale(1.05);
+        }
+
+        .btn-back {
+            background-color: #dc3545;
+            color: white;
+        }
+
+        .btn-back:hover {
+            background-color: #c82333;
+            transform: scale(1.05);
+        }
+
+        /* Animation Classes */
+        .slide-out {
+            transform: translateX(100%);
+        }
+
+        .show-qr {
+            display: flex !important;
+        }
+
+        .landscape-message {
+            font-size: 12px;
+            color: red;
+            margin-top: 15px;
+            font-weight: bold;
+        }
+
+        /* Popup Form */
+        .form-popup {
+            display: none;
+            position: fixed;
+            left: 50%;
+            top: 50%;
+            transform: translate(-50%, -50%);
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
+            text-align: center;
+            width: 300px;
+        }
+
+        .form-popup input {
+            width: 100%;
+            padding: 10px;
+            margin: 10px 0;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+        }
+
+        .form-popup button {
+            width: 100%;
+        }
+
+    </style>
+</head>
+<body>
+
+    <div class="slider-container" id="slider-container">
+        <!-- Image Section -->
+        <div class="image-container" id="image-container"></div>
+
+        <!-- Form Section -->
+        <div class="form-container" id="form-container">
+            <div class="form-box">
+                <div class="logo mb-3">
+                    <img src="{% static 'image/logo.png' %}" width="150px">
+                </div>
+                <h4>Select an Action</h4>
+                <div class="btn-container">
+                    <button id="createQRBtn" class="btn btn-custom btn-create">Create QR Code</button>
+                    <button id="displayQRBtn" class="btn btn-custom btn-display">Display QR Code</button>
+                    <br>
+                    <p class="landscape-message">📱 View in landscape for better experience.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- QR Code Section -->
+        <div class="qr-container" id="qr-container">
+            <h2>Your QR Code</h2>
+            <img id="qrImage" src="{% static 'image/qr_code.png' %}" width="200px" alt="QR Code">
+            <button id="backBtn" class="btn btn-custom btn-back">Go Back</button>
+        </div>
+    </div>
+
+    <!-- Popup Form for Custom Links -->
+    <div id="qrFormContainer" class="form-popup">
+        <h4>Enter Custom Links</h4>
+        <input type="text" id="link1" placeholder="Enter Link 1" class="form-control">
+        <input type="text" id="link2" placeholder="Enter Link 2" class="form-control">
+        <button id="submitQR" class="btn btn-success mt-2">Generate QR</button>
+        <button id="closeForm" class="btn btn-danger mt-2">Cancel</button>
+    </div>
+
+    <script>
+        document.getElementById("displayQRBtn").addEventListener("click", function () {
+            document.getElementById("image-container").classList.add("slide-out");
+            document.getElementById("form-container").style.opacity = "0";
+            setTimeout(() => {
+                document.getElementById("form-container").style.display = "none";
+            }, 500);
+            document.getElementById("qr-container").classList.add("show-qr");
+        });
+
+        document.getElementById("backBtn").addEventListener("click", function () {
+            document.getElementById("image-container").classList.remove("slide-out");
+            document.getElementById("form-container").style.display = "flex";
+            setTimeout(() => {
+                document.getElementById("form-container").style.opacity = "1";
+            }, 200);
+            document.getElementById("qr-container").classList.remove("show-qr");
+        });
+
+        // Open Form
+        document.getElementById("createQRBtn").addEventListener("click", function () {
+            document.getElementById("qrFormContainer").style.display = "block";
+        });
+
+        // Close Form
+        document.getElementById("closeForm").addEventListener("click", function () {
+            document.getElementById("qrFormContainer").style.display = "none";
+        });
+
+        // Submit Form
+        document.getElementById("submitQR").addEventListener("click", function () {
+            let link1 = document.getElementById("link1").value;
+            let link2 = document.getElementById("link2").value;
+            
+            fetch("{% url 'create_qr' %}", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "X-CSRFToken": "{{ csrf_token }}"
+                },
+                body: JSON.stringify({ link1: link1, link2: link2 })
+            })
+            .then(response => response.json())
+            .then(data => {
+                alert("QR Code Created Successfully!");
+                document.getElementById("qrFormContainer").style.display = "none";
+            });
+        });
+
+    </script>
+
+</body>
+</html>
